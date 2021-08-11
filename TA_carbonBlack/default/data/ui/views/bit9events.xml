@@ -8,13 +8,26 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
   </fieldset>
   <row>
     <panel>
       <chart>
         <title>Top Event Subtypes</title>
         <search>
-          <query>`cb_index` EventSubType!="Agent notification (session change)"| stats count as Total by EventSubType | sort -Total | head 10 | rename EventSubType as "Event Subtype"</query>
+          <query>`cb_index` Bit9Server IN$env$  EventSubType!="Agent notification (session change)"| stats count as Total by EventSubType | sort -Total | head 10 | rename EventSubType as "Event Subtype"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -27,7 +40,7 @@
       <chart>
         <title>Top Event Types</title>
         <search>
-          <query>`cb_index`| stats count as total by EventType | sort - total | head 10 | rename EventType as "Event Type"</query>
+          <query>`cb_index` Bit9Server IN$env$ | stats count as total by EventType | sort - total | head 10 | rename EventType as "Event Type"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -41,7 +54,7 @@
       <table>
         <title>Errors</title>
         <search>
-          <query>`cb_index` eventtype=bit9_event  Priority="Error" | table Timestamp, HostName, Message | rename HostName as Computer</query>
+          <query>`cb_index` Bit9Server IN$env$  eventtype=bit9_event  Priority="Error" | table Timestamp, HostName, Message | rename HostName as Computer</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -54,7 +67,7 @@
       <table>
         <title>Top Compuiters</title>
         <search>
-          <query>`cb_index` eventtype=bit9_event HostName!="System" | top 0 HostName showperc=false | rename HostName as Computer, count as Events</query>
+          <query>`cb_index` Bit9Server IN$env$  eventtype=bit9_event HostName!="System" | top 0 HostName showperc=false | rename HostName as Computer, count as Events</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -65,7 +78,7 @@
       <table>
         <title>Top Users</title>
         <search>
-          <query>`cb_index` eventtype=bit9_event HostName!="System" UserName!="" UserName!="NT AUTHORITY\\SYSTEM" | top 0 UserName showperc=false | rename UserName as User, count as Events</query>
+          <query>`cb_index` Bit9Server IN$env$  eventtype=bit9_event HostName!="System" UserName!="" UserName!="NT AUTHORITY\\SYSTEM" | top 0 UserName showperc=false | rename UserName as User, count as Events</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>

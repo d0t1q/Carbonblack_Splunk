@@ -8,13 +8,39 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>`cb_index`  Bit9Server IN$env$   | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
   </fieldset>
   <row>
     <panel>
       <title>Policy managment</title>
       <chart>
         <search>
-          <query>`cb_index` EventType="Policy Management" | timechart bins=50 minspan=15m count by UserName limit=0</query>
+          <query>`cb_index` Bit9Server IN$env$  EventType="Policy Management" | timechart bins=50 minspan=15m count by UserName limit=0</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -29,7 +55,7 @@
       <title>Computer Managment</title>
       <chart>
         <search>
-          <query>`cb_index` EventType="Computer Management" | timechart bins=50 minspan=15m count by UserName limit=100</query>
+          <query>`cb_index` Bit9Server IN$env$  EventType="Computer Management" | timechart bins=50 minspan=15m count by UserName limit=100</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -44,7 +70,7 @@
       <title>Session &amp; General Management</title>
       <chart>
         <search>
-          <query>`cb_index` (EventType="Session Management" OR EventType="General Management") UserName!=""| timechart bins=50 minspan=15m count by UserName limit=0</query>
+          <query>`cb_index` Bit9Server IN$env$  (EventType="Session Management" OR EventType="General Management") UserName!=""| timechart bins=50 minspan=15m count by UserName limit=0</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -59,7 +85,7 @@
       <title>Top Ten Users - Global Approvals</title>
       <table>
         <search>
-          <query>`cb_index` EventSubTypeId=627 | stats count by UserName | sort -count | head 10</query>
+          <query>`cb_index` Bit9Server IN$env$  EventSubTypeId=627 | stats count by UserName | sort -count | head 10</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -71,7 +97,7 @@
       <title>Top Ten Users - Local Approvals</title>
       <table>
         <search>
-          <query>`cb_index` EventSubTypeId=623 | stats count by UserName | sort -count | head 10</query>
+          <query>`cb_index` Bit9Server IN$env$  EventSubTypeId=623 | stats count by UserName | sort -count | head 10</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>

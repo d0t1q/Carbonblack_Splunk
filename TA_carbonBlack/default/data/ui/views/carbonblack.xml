@@ -5,6 +5,19 @@
       <label>Hash Or File Name:</label>
       <default></default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
     <input type="dropdown" token="hashTerm" searchWhenChanged="false">
       <label>Match type</label>
       <default>HashSearch</default>
@@ -36,7 +49,7 @@
       <table>
         <title>Number of computers on which this file has been created:</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*NetTrace*  `FileCreatedOps`  [search `$hashTermOut$($hashToken$)` | table FileHash] | top 0 FileName showperc=false | rename FileName as "File Name", count as Computers</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*NetTrace*  `FileCreatedOps`  [search `$hashTermOut$($hashToken$)` | table FileHash] | top 0 FileName showperc=false | rename FileName as "File Name", count as Computers</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -47,7 +60,8 @@
       <table>
         <title>File Hashes</title>
         <search>
-          <query>`$hashTermOut$($hashToken$)` | dedup FileHash | table Md5, Sha1, FileHash | rename Md5 AS MD5, Sha1 AS "SHA-1", FileHash AS "SHA-256"
+          <query>
+            `$hashTermOut$($hashToken$)` Bit9Server IN$env$ | dedup FileHash | table Md5, Sha1, FileHash | rename Md5 AS MD5, Sha1 AS "SHA-1", FileHash AS "SHA-256"
           </query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
@@ -61,7 +75,7 @@
       <table>
         <title>File Information: First Seen On Network</title>
         <search>
-          <query>`$hashTermOut$($hashToken$)` | convert timeformat="%m/%d/%Y %I:%M:%S %p" mktime(ModifiedDate) AS ModifiedCTime | sort ModifiedCTime | table FileName, Timestamp, PathName, Publisher, HostName, TrustValue, FileSize | stats first(FileName) as "File Name" first(Timestamp) as "Date Created" first(PathName) as "First Path" first(Publisher) as Publisher first(HostName) as "First Computer" last(TrustValue) as "Trust" first(FileSize) as "File Size"</query>
+          <query>`$hashTermOut$($hashToken$)` Bit9Server IN$env$ | convert timeformat="%m/%d/%Y %I:%M:%S %p" mktime(ModifiedDate) AS ModifiedCTime | sort ModifiedCTime | table FileName, Timestamp, PathName, Publisher, HostName, TrustValue, FileSize | stats first(FileName) as "File Name" first(Timestamp) as "Date Created" first(PathName) as "First Path" first(Publisher) as Publisher first(HostName) as "First Computer" last(TrustValue) as "Trust" first(FileSize) as "File Size"</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -74,7 +88,7 @@
       <chart>
         <title>Hash Activity</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*NetTrace* `FileActivityOps` [search `$hashTermOut$($hashToken$)` | table FileHash] | append [search `cb_index` sourcetype=bit9 source=*NetTrace* `FileActivityOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | timechart bins=50 count(eval(`$hashTestOut$($hashToken$)` AND OpType=0)) as "Got created", count(eval(`$notHashTestOut$($hashToken$)` AND OpType=0)) as "Created another file", count(eval(`$hashTestOut$($hashToken$)` AND OpType!=0)) as "Got modified", count(eval(`$notHashTestOut$($hashToken$)` AND OpType!=0)) as "Modified another file"</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*NetTrace* `FileActivityOps` [search `$hashTermOut$($hashToken$)` | table FileHash] | append [search `cb_index` sourcetype=bit9 source=*NetTrace* `FileActivityOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | timechart bins=50 count(eval(`$hashTestOut$($hashToken$)` AND OpType=0)) as "Got created", count(eval(`$notHashTestOut$($hashToken$)` AND OpType=0)) as "Created another file", count(eval(`$hashTestOut$($hashToken$)` AND OpType!=0)) as "Got modified", count(eval(`$notHashTestOut$($hashToken$)` AND OpType!=0)) as "Modified another file"</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -90,7 +104,7 @@
       <table>
         <title>Other Hashes With First-Seen Name</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*NetTrace* [search `$hashTermOut$($hashToken$)` latest=now earliest=1 | convert timeformat="%m/%d/%Y %I:%M:%S %p" mktime(ModifiedDate) AS ModifiedCTime | sort ModifiedCTime | head 1 | table FileName] | dedup FileHash, HostName | table FileHash, HostName | rename FileHash as Hash, HostName as Computer</query>
+          <query>`cb_index`  Bit9Server IN$env$ sourcetype=bit9 source=*NetTrace* [search `$hashTermOut$($hashToken$)` latest=now earliest=1 | convert timeformat="%m/%d/%Y %I:%M:%S %p" mktime(ModifiedDate) AS ModifiedCTime | sort ModifiedCTime | head 1 | table FileName] | dedup FileHash, HostName | table FileHash, HostName | rename FileHash as Hash, HostName as Computer</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -103,7 +117,7 @@
       <table>
         <title>Files Modified By This File</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*NetTrace* `FilesModifiedOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash] | table Timestamp, HostName, FileName, OpDescription | sort Timestamp | rename HostName as Computer, FileName as Name, OpDescription as Operation</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*NetTrace* `FilesModifiedOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash] | table Timestamp, HostName, FileName, OpDescription | sort Timestamp | rename HostName as Computer, FileName as Name, OpDescription as Operation</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -116,7 +130,7 @@
       <table>
         <title>Top Hashes Modified By This File</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*NetTrace* `FilesModifiedOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash] | top showperc=false 0 FileHash, FileName | sort -count | rename FileHash as Hash, FileName as Name, count as Count</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*NetTrace* `FilesModifiedOps` [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash] | top showperc=false 0 FileHash, FileName | sort -count | rename FileHash as Hash, FileName as Name, count as Count</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -129,7 +143,7 @@
       <table>
         <title>Top Event Subtypes Containing This File</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*Event* [search `$hashTermOut$($hashToken$)` | table FileHash] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* [search `HashSearch($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | top 0 EventSubType showperc=false | rename EventSubType as "Event Subtype", count as Count</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*Event* [search `$hashTermOut$($hashToken$)` | table FileHash] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* [search `HashSearch($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | top 0 EventSubType showperc=false | rename EventSubType as "Event Subtype", count as Count</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>
@@ -140,7 +154,7 @@
       <chart>
         <title>Top Rules Containing This File</title>
         <search>
-          <query>`cb_index` sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | table FileHash] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | eval InstallerHash=FileHash | table InstallerHash]] | top 0 RuleName</query>
+          <query>`cb_index` Bit9Server IN$env$ sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | table FileHash] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | eval ProcessHash=FileHash | table ProcessHash]] | append maxtime=180 [search `cb_index` sourcetype=bit9 source=*Event* RuleName!="" [search `$hashTermOut$($hashToken$)` | eval InstallerHash=FileHash | table InstallerHash]] | top 0 RuleName</query>
           <earliest>$Time.earliest$</earliest>
           <latest>$Time.latest$</latest>
         </search>

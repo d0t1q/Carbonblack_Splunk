@@ -8,13 +8,26 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
   </fieldset>
   <row>
     <panel>
       <title>Approvals Count</title>
       <chart>
         <search>
-          <query>`ApprovedSearch`| timechart bins=50 count as "Approvals"</query>
+          <query>`ApprovedSearch` Bit9Server IN$env$ | timechart bins=50 count as "Approvals"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -26,7 +39,7 @@
       <title>Computer Approvals</title>
       <table>
         <search>
-          <query>| savedsearch "File Approvals" | stats sum(count) as Approvals by HostName | sort -Approvals | rename HostName as Computer</query>
+          <query>| savedsearch "File Approvals"  Bit9Server IN$env$ | stats sum(count) as Approvals by HostName | sort -Approvals | rename HostName as Computer</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -39,7 +52,7 @@
       <title>Approved Filenames</title>
       <table>
         <search>
-          <query>`ApprovedSearch` | top 0 FileName showperc=false | rename count as Approvals, FileName as "File Name"</query>
+          <query>`ApprovedSearch`  Bit9Server IN$env$ | top 0 FileName showperc=false | rename count as Approvals, FileName as "File Name"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -52,7 +65,7 @@
       <chart>
         <title>Approval Distribution</title>
         <search>
-          <query>`ApprovedSearch` FileHash!=""  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Approvals, TrustValue as "File Trust" | sort -"File Trust"</query>
+          <query>`ApprovedSearch` FileHash!=""   Bit9Server IN$env$ | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Approvals, TrustValue as "File Trust" | sort -"File Trust"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -68,7 +81,7 @@
       <title>File Hash By Trust Value (Populated from Pie Chart)</title>
       <table>
         <search>
-          <query>`ApprovedSearch` | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
+          <query>`ApprovedSearch`  Bit9Server IN$env$  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
           <earliest>-24h@h</earliest>
           <latest>now</latest>
         </search>
@@ -81,7 +94,7 @@
       <table>
         <title>Approvals by Process</title>
         <search>
-          <query>`ApprovedSearch` ProcessFileName!=""| top 0 ProcessFileName showperc=false | rename count as Approvals, ProcessFileName as Process</query>
+          <query>`ApprovedSearch` Bit9Server IN$env$  ProcessFileName!=""| top 0 ProcessFileName showperc=false | rename count as Approvals, ProcessFileName as Process</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -94,7 +107,7 @@
       <table>
         <title>Approvals by Rule</title>
         <search>
-          <query>`ApprovedSearch` RuleName!="" | top 0 RuleName showperc=false | rename count as Approvals, RuleName as Rule</query>
+          <query>`ApprovedSearch` Bit9Server IN$env$  RuleName!="" | top 0 RuleName showperc=false | rename count as Approvals, RuleName as Rule</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -105,7 +118,7 @@
       <table>
         <title>Approval Sources</title>
         <search>
-          <query>`ApprovedSearch` | top 0 EventSubType showperc=false | rename count as Approvals, EventSubType as Reason</query>
+          <query>`ApprovedSearch` Bit9Server IN$env$  | top 0 EventSubType showperc=false | rename count as Approvals, EventSubType as Reason</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>

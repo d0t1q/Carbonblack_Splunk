@@ -8,14 +8,29 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
   </fieldset>
   <row>
     <panel>
       <table>
         <title>Events Per Day</title>
         <search>
-          <query>(eventtype=bit9_event OR eventtype=bit9_filesOnComputers) HostName!="" HostName!="System" | stats count(OpType) as A, count(EventSubType) as E by HostName | addinfo | eval D=((info_max_time-info_min_time)/(60*60*24)) | eval AB=(round(A/D,0)) | eval EV=(round(E/D,0)) | table HostName, EV | sort -EV
-|  rename  EV as "Events per day"</query>
+          <query>
+            (eventtype=bit9_event OR eventtype=bit9_filesOnComputers) Bit9Server IN$env$  HostName!="" HostName!="System" Bit9Server IN$env$ | stats count(OpType) as A, count(EventSubType) as E by HostName | addinfo | eval D=((info_max_time-info_min_time)/(60*60*24)) | eval AB=(round(A/D,0)) | eval EV=(round(E/D,0)) | table HostName, EV | sort -EV
+            |  rename  EV as "Events per day"
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -27,8 +42,10 @@
       <viz type="treemap_app.treemap">
         <title>Computer Activity</title>
         <search>
-          <query>| savedsearch "Host Activity" | search Computer!=TOTALOFALLCOMPUTERS | fields Computer, "File activity per day", "Events per day"
-| sort - "Events per day"</query>
+          <query>
+            | savedsearch "Host Activity" Bit9Server IN$env$ | search Computer!=TOTALOFALLCOMPUTERS Bit9Server IN $env$ | fields Computer, "File activity per day", "Events per day"
+            | sort - "Events per day"
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -42,7 +59,7 @@
       <title>Events over Time</title>
       <chart>
         <search>
-          <query>`cb_index` eventtype=bit9_event | timechart span=1d  count(EventSubType) as "Events"</query>
+          <query>`cb_index` eventtype=bit9_event  Bit9Server IN$env$ | timechart span=1d  count(EventSubType) as "Events"</query>
           <earliest>-30d@d</earliest>
           <latest>now</latest>
         </search>
@@ -56,8 +73,10 @@
       <title>Triggered Alerts</title>
       <single>
         <search>
-          <query>`cb_index` EventSubTypeId=1104
-| stats count as count</query>
+          <query>
+            `cb_index` EventSubTypeId=1104
+            | stats count as count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -68,8 +87,10 @@
       <title>File Blocks</title>
       <single>
         <search>
-          <query>`cb_index` `EventSubTypeBlock`
-| stats count as count</query>
+          <query>
+            `cb_index` `EventSubTypeBlock`
+            | stats count as count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -80,8 +101,10 @@
       <title>New Unapproved File Instances</title>
       <single>
         <search>
-          <query>`cb_index` EventSubTypeId=1003
-| stats count as count</query>
+          <query>
+            `cb_index` EventSubTypeId=1003
+            | stats count as count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -93,7 +116,7 @@
       <single>
         <title>approvals</title>
         <search>
-          <query>`cb_index` `EventFileApproved`| stats count as count</query>
+          <query>`cb_index` Bit9Server IN$env$ `EventFileApproved`| stats count as count</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -106,7 +129,7 @@
       <title>File Blocks Over Time</title>
       <chart>
         <search>
-          <query>`cb_index` `BlockSearch` | timechart bins=50 count(_raw) as "File Blocks"</query>
+          <query>`cb_index` Bit9Server IN$env$ `BlockSearch` | timechart bins=50 count(_raw) as "File Blocks"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -118,7 +141,7 @@
       <title>File Blocks Over Host</title>
       <chart>
         <search>
-          <query>`BlockSearch` | top 10 HostName showperc=false | rename count as "File Blocks", HostName as Computer</query>
+          <query>`BlockSearch` Bit9Server IN$env$ | top 10 HostName showperc=false | rename count as "File Blocks", HostName as Computer</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -132,7 +155,7 @@
       <chart>
         <title>New unapproved files</title>
         <search>
-          <query>| savedsearch "New File Events"| timechart sum("New unapproved files") as "New unapproved files"</query>
+          <query>| savedsearch "New File Events" Bit9Server IN$env$ | timechart sum("New unapproved files") as "New unapproved files"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -149,7 +172,7 @@
       <chart>
         <title>New files in catalog</title>
         <search>
-          <query>| savedsearch "New File Events"| timechart bins=50 sum("New files in catalog") as "New files in catalog"</query>
+          <query>| savedsearch "New File Events" Bit9Server IN$env$ | timechart bins=50 sum("New files in catalog") as "New files in catalog"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -163,7 +186,7 @@
       <chart>
         <title>Approvals</title>
         <search>
-          <query>`cb_index` eventtype=bit9_event `EventFileApproved` | timechart bins=50 count(_raw) as "Approvals"</query>
+          <query>`cb_index` Bit9Server IN$env$   eventtype=bit9_event `EventFileApproved` | timechart bins=50 count(_raw) as "Approvals"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -175,7 +198,7 @@
       <chart>
         <title>Approvals by Computer</title>
         <search>
-          <query>`cb_index` eventtype=bit9_event `EventFileApproved` | top 10 HostName showperc=false | rename count as Approvals, HostName as Computer</query>
+          <query>`cb_index` Bit9Server IN$env$  eventtype=bit9_event `EventFileApproved` | top 10 HostName showperc=false | rename count as Approvals, HostName as Computer</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>

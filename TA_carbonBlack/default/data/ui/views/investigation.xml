@@ -24,8 +24,8 @@
         </condition>
       </change>
     </input>
-    <input type="dropdown" token="env" searchWhenChanged="true">
-      <label>env</label>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
       <fieldForLabel>Bit9Server</fieldForLabel>
       <fieldForValue>Bit9Server</fieldForValue>
       <search>
@@ -33,6 +33,9 @@
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
     </input>
     <input type="text" token="userN" searchWhenChanged="true">
       <label>userName</label>
@@ -59,9 +62,11 @@
       <table>
         <title>Top Blocks</title>
         <search>
-          <query>index=carbonblack UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by  CommandLine
-| sort - count</query>
+          <query>
+            index=carbonblack Bit9Server IN$env$ UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by  CommandLine
+            | sort - count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -76,9 +81,11 @@
       <table>
         <title>Rare Blocks</title>
         <search>
-          <query>index=carbonblack UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by  CommandLine
-| sort  count</query>
+          <query>
+            index=carbonblack  Bit9Server IN$env$ UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by  CommandLine
+            | sort  count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -95,9 +102,11 @@
       <table>
         <title>Top Blocks by Users</title>
         <search>
-          <query>index=carbonblack UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by UserName CommandLine
-| sort - count</query>
+          <query>
+            index=carbonblack Bit9Server IN$env$  UserName!="" CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by UserName CommandLine
+            | sort - count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -113,9 +122,11 @@
       <table>
         <title>Top Hosts with Blocks</title>
         <search>
-          <query>index=carbonblack UserName!="" CommandLine!="" $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by HostName
-| sort - count</query>
+          <query>
+            index=carbonblack Bit9Server IN$env$ UserName!="" CommandLine!="" $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by HostName
+            | sort - count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -132,9 +143,11 @@
       <table>
         <title>Specific User Blocks</title>
         <search>
-          <query>index=carbonblack UserName=$userN|s$ CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by UserName CommandLine
-| sort - count</query>
+          <query>
+            index=carbonblack Bit9Server IN$env$ UserName=$userN|s$ CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by UserName CommandLine
+            | sort - count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -148,9 +161,11 @@
     <panel>
       <table>
         <search>
-          <query>index=carbonblack HostName=$hostN|s$ CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
-| stats count by CommandLine
-| sort - count</query>
+          <query>
+            index=carbonblack  Bit9Server IN$env$ HostName=$hostN|s$ CommandLine!=""  $keyword$ NOT (CommandLine="rundll32.exe WSClient.dll,RefreshBannedAppsList" OR CommandLine="C:\Windows\WinStore\WSHost.exe -Embedding" OR CommandLine="scrnsave.scr /s" OR CommandLine="C:\Windows\system32\cleanmgr.exe /autoclean /d C:*" OR CommandLine="*WerFault.exe*" OR CommandLine="rundll32.exe C:\Windows\system32\davclnt.dll,DavSetCookie") NOT (ProcessFileName="wermgr.exe") UserName=* EventSubType IN ("Tamper Protection","Security Alert","Execution block (Custom Rule)","Write block (Custom Rule)","Unapproved process discovered","Agent error")
+            | stats count by CommandLine
+            | sort - count
+          </query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>

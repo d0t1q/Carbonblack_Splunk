@@ -8,13 +8,26 @@
         <latest>now</latest>
       </default>
     </input>
+    <input type="multiselect" token="env">
+      <label>Environment</label>
+      <fieldForLabel>Bit9Server</fieldForLabel>
+      <fieldForValue>Bit9Server</fieldForValue>
+      <search>
+        <query>index=carbonblack  | stats count by Bit9Server</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> ,</delimiter>
+      <prefix>(</prefix>
+      <suffix>)</suffix>
+    </input>
   </fieldset>
   <row>
     <panel>
       <table>
         <title>Block by UserName</title>
         <search>
-          <query>`BlockSearch` | top 0 UserName showperc=false | rename count as Blocks, FileName as "File Name"</query>
+          <query>`BlockSearch` Bit9Server IN$env$  | top 0 UserName showperc=false | rename count as Blocks, FileName as "File Name"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -25,7 +38,7 @@
       <table>
         <title>Block by System</title>
         <search>
-          <query>| savedsearch "File Blocks" | where TotalField="Total" | transpose | rename column as Computer "row 1" as Blocks | where isnum(Blocks) AND Computer!="total" | sort -Blocks</query>
+          <query>| savedsearch "File Blocks" Bit9Server IN$env$  | where TotalField="Total" | transpose | rename column as Computer "row 1" as Blocks | where isnum(Blocks) AND Computer!="total" | sort -Blocks</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -36,7 +49,7 @@
       <table>
         <title>Block by FileName</title>
         <search>
-          <query>`BlockSearch` | top 0 FileName showperc=false | rename count as Blocks, FileName as "File Name"</query>
+          <query>`BlockSearch` Bit9Server IN$env$  | top 0 FileName showperc=false | rename count as Blocks, FileName as "File Name"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -47,7 +60,7 @@
       <table>
         <title>Blocks by Process</title>
         <search>
-          <query>`BlockSearch` | top 0 ProcessFileName showperc=false | rename count as Blocks, ProcessFileName as Process</query>
+          <query>`BlockSearch` Bit9Server IN$env$  | top 0 ProcessFileName showperc=false | rename count as Blocks, ProcessFileName as Process</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -60,7 +73,7 @@
       <chart>
         <title>Blocks by File Trust</title>
         <search>
-          <query>`BlockSearch` FileHash!=""  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Blocks, TrustValue as "File Trust" | sort -"File Trust"</query>
+          <query>`BlockSearch` Bit9Server IN$env$  FileHash!=""  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Blocks, TrustValue as "File Trust" | sort -"File Trust"</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -75,7 +88,7 @@
       <table>
         <title>Hashes by File Trust (Populated from bar graph click)</title>
         <search>
-          <query>`BlockSearch` | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
+          <query>`BlockSearch` Bit9Server IN$env$  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -88,7 +101,7 @@
       <table>
         <title>Block by Rule</title>
         <search>
-          <query>`BlockSearch` RuleName!="" | top 0 RuleName showperc=false | rename count as Blocks, RuleName as Rule</query>
+          <query>`BlockSearch` Bit9Server IN$env$  RuleName!="" | top 0 RuleName showperc=false | rename count as Blocks, RuleName as Rule</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
@@ -99,7 +112,7 @@
       <table>
         <title>Block By Reason</title>
         <search>
-          <query>`BlockSearch` | top 0 EventSubType showperc=false | rename count as Blocks, EventSubType as Reason</query>
+          <query>`BlockSearch` Bit9Server IN$env$  | top 0 EventSubType showperc=false | rename count as Blocks, EventSubType as Reason</query>
           <earliest>$timeR.earliest$</earliest>
           <latest>$timeR.latest$</latest>
         </search>
