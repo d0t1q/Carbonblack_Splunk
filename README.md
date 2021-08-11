@@ -13,3 +13,9 @@ Not updated(but I'll update later, if the file catalog isnt needed):
   5. bit9pivots
 
 investigation.xml is new, based on what our techs needed
+
+
+Make sure you edit the macro 'cb_index' to your index 
+
+[cb_index]
+definition = index=carbonblack
