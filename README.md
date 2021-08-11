@@ -5,7 +5,7 @@ essentially recreating the app without knowing what it looks like.
 
 I personally don't have the file catalog so I've dropped that from the dashboards. 
 
-Not updated:
+Not updated(but I'll update later, if the file catalog isnt needed):
   1. bit9user
   2. bit9newunapproved
   3. bit9fileactivity
