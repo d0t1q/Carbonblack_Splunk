@@ -18,4 +18,5 @@ investigation.xml is new, based on what our techs needed
 Make sure you edit the macro 'cb_index' to your index 
 
 [cb_index]
+
 definition = index=carbonblack
