@@ -1,0 +1,18 @@
+<nav search_view="search">
+        <view name="carbonblack"/>
+        <view name="bit9main"/>
+        <view name="investigation" default='true'/>
+        <collection label="Activity Details">
+                <view name="bit9blocks" />
+                <view name="bit9approvals" />
+                <view name="bit9events" />
+        </collection>
+        <collection label="Investigations">
+                <view name="bit9machine" />
+        </collection>
+        <view name="bit9pivots" />
+        <collection label="Console Users">
+                <view name="bit9allusers" />
+        </collection>
+        <a href="mailto:splunk@bit9.com">Send Feedback to Bit9</a>
+</nav>

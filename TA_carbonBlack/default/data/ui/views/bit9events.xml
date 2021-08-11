@@ -1,0 +1,77 @@
+<form>
+  <label>Events</label>
+  <fieldset submitButton="false">
+    <input type="time" token="timeR">
+      <label>Time</label>
+      <default>
+        <earliest>-4h@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <chart>
+        <title>Top Event Subtypes</title>
+        <search>
+          <query>`cb_index` EventSubType!="Agent notification (session change)"| stats count as Total by EventSubType | sort -Total | head 10 | rename EventSubType as "Event Subtype"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Top Event Types</title>
+        <search>
+          <query>`cb_index`| stats count as total by EventType | sort - total | head 10 | rename EventType as "Event Type"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Errors</title>
+        <search>
+          <query>`cb_index` eventtype=bit9_event  Priority="Error" | table Timestamp, HostName, Message | rename HostName as Computer</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Top Compuiters</title>
+        <search>
+          <query>`cb_index` eventtype=bit9_event HostName!="System" | top 0 HostName showperc=false | rename HostName as Computer, count as Events</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Top Users</title>
+        <search>
+          <query>`cb_index` eventtype=bit9_event HostName!="System" UserName!="" UserName!="NT AUTHORITY\\SYSTEM" | top 0 UserName showperc=false | rename UserName as User, count as Events</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

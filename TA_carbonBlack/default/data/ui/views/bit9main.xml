@@ -1,0 +1,187 @@
+<form>
+  <label>Deployment Activity</label>
+  <fieldset submitButton="false">
+    <input type="time" token="timeR">
+      <label>Time</label>
+      <default>
+        <earliest>-4h@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Events Per Day</title>
+        <search>
+          <query>(eventtype=bit9_event OR eventtype=bit9_filesOnComputers) HostName!="" HostName!="System" | stats count(OpType) as A, count(EventSubType) as E by HostName | addinfo | eval D=((info_max_time-info_min_time)/(60*60*24)) | eval AB=(round(A/D,0)) | eval EV=(round(E/D,0)) | table HostName, EV | sort -EV
+|  rename  EV as "Events per day"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <viz type="treemap_app.treemap">
+        <title>Computer Activity</title>
+        <search>
+          <query>| savedsearch "Host Activity" | search Computer!=TOTALOFALLCOMPUTERS | fields Computer, "File activity per day", "Events per day"
+| sort - "Events per day"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Events over Time</title>
+      <chart>
+        <search>
+          <query>`cb_index` eventtype=bit9_event | timechart span=1d  count(EventSubType) as "Events"</query>
+          <earliest>-30d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Triggered Alerts</title>
+      <single>
+        <search>
+          <query>`cb_index` EventSubTypeId=1104
+| stats count as count</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <title>File Blocks</title>
+      <single>
+        <search>
+          <query>`cb_index` `EventSubTypeBlock`
+| stats count as count</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <title>New Unapproved File Instances</title>
+      <single>
+        <search>
+          <query>`cb_index` EventSubTypeId=1003
+| stats count as count</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Approvals</title>
+      <single>
+        <title>approvals</title>
+        <search>
+          <query>`cb_index` `EventFileApproved`| stats count as count</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>File Blocks Over Time</title>
+      <chart>
+        <search>
+          <query>`cb_index` `BlockSearch` | timechart bins=50 count(_raw) as "File Blocks"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>File Blocks Over Host</title>
+      <chart>
+        <search>
+          <query>`BlockSearch` | top 10 HostName showperc=false | rename count as "File Blocks", HostName as Computer</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>New unapproved files</title>
+        <search>
+          <query>| savedsearch "New File Events"| timechart sum("New unapproved files") as "New unapproved files"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>New files in catalog</title>
+        <search>
+          <query>| savedsearch "New File Events"| timechart bins=50 sum("New files in catalog") as "New files in catalog"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Approvals</title>
+        <search>
+          <query>`cb_index` eventtype=bit9_event `EventFileApproved` | timechart bins=50 count(_raw) as "Approvals"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Approvals by Computer</title>
+        <search>
+          <query>`cb_index` eventtype=bit9_event `EventFileApproved` | top 10 HostName showperc=false | rename count as Approvals, HostName as Computer</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+</form>

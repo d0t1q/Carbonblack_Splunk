@@ -1,0 +1,82 @@
+<form>
+  <label>All Console Users</label>
+  <fieldset submitButton="false">
+    <input type="time" token="timeR">
+      <label>Time Range</label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Policy managment</title>
+      <chart>
+        <search>
+          <query>`cb_index` EventType="Policy Management" | timechart bins=50 minspan=15m count by UserName limit=0</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Computer Managment</title>
+      <chart>
+        <search>
+          <query>`cb_index` EventType="Computer Management" | timechart bins=50 minspan=15m count by UserName limit=100</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Session &amp; General Management</title>
+      <chart>
+        <search>
+          <query>`cb_index` (EventType="Session Management" OR EventType="General Management") UserName!=""| timechart bins=50 minspan=15m count by UserName limit=0</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Ten Users - Global Approvals</title>
+      <table>
+        <search>
+          <query>`cb_index` EventSubTypeId=627 | stats count by UserName | sort -count | head 10</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Top Ten Users - Local Approvals</title>
+      <table>
+        <search>
+          <query>`cb_index` EventSubTypeId=623 | stats count by UserName | sort -count | head 10</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

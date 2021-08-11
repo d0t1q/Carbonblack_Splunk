@@ -1,0 +1,110 @@
+<form>
+  <label>Blocks</label>
+  <fieldset submitButton="false">
+    <input type="time" token="timeR">
+      <label>Time</label>
+      <default>
+        <earliest>-4h@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>Block by UserName</title>
+        <search>
+          <query>`BlockSearch` | top 0 UserName showperc=false | rename count as Blocks, FileName as "File Name"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Block by System</title>
+        <search>
+          <query>| savedsearch "File Blocks" | where TotalField="Total" | transpose | rename column as Computer "row 1" as Blocks | where isnum(Blocks) AND Computer!="total" | sort -Blocks</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Block by FileName</title>
+        <search>
+          <query>`BlockSearch` | top 0 FileName showperc=false | rename count as Blocks, FileName as "File Name"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Blocks by Process</title>
+        <search>
+          <query>`BlockSearch` | top 0 ProcessFileName showperc=false | rename count as Blocks, ProcessFileName as Process</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Blocks by File Trust</title>
+        <search>
+          <query>`BlockSearch` FileHash!=""  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Blocks, TrustValue as "File Trust" | sort -"File Trust"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">all</option>
+        <drilldown>
+          <set token="trustV">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <table>
+        <title>Hashes by File Trust (Populated from bar graph click)</title>
+        <search>
+          <query>`BlockSearch` | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Block by Rule</title>
+        <search>
+          <query>`BlockSearch` RuleName!="" | top 0 RuleName showperc=false | rename count as Blocks, RuleName as Rule</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Block By Reason</title>
+        <search>
+          <query>`BlockSearch` | top 0 EventSubType showperc=false | rename count as Blocks, EventSubType as Reason</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

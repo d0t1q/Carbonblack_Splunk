@@ -1,0 +1,116 @@
+<form>
+  <label>Approvals</label>
+  <fieldset submitButton="false">
+    <input type="time" token="timeR">
+      <label>Time</label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Approvals Count</title>
+      <chart>
+        <search>
+          <query>`ApprovedSearch`| timechart bins=50 count as "Approvals"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Computer Approvals</title>
+      <table>
+        <search>
+          <query>| savedsearch "File Approvals" | stats sum(count) as Approvals by HostName | sort -Approvals | rename HostName as Computer</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Approved Filenames</title>
+      <table>
+        <search>
+          <query>`ApprovedSearch` | top 0 FileName showperc=false | rename count as Approvals, FileName as "File Name"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Approval Distribution</title>
+        <search>
+          <query>`ApprovedSearch` FileHash!=""  | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | top 0 TrustValue showperc=false | rename count as Approvals, TrustValue as "File Trust" | sort -"File Trust"</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">all</option>
+        <option name="refresh.display">progressbar</option>
+        <drilldown>
+          <set token="trustV">$click.value$</set>
+        </drilldown>
+      </chart>
+    </panel>
+    <panel>
+      <title>File Hash By Trust Value (Populated from Pie Chart)</title>
+      <table>
+        <search>
+          <query>`ApprovedSearch` | eval msgtime=strptime(MessageTime, "%m/%d/%Y %I:%M:%S %p") | sort 0 -msgtime | stats first(FileTrust) as TrustValue by FileHash | where TrustValue=$trustV$ | fields + FileHash</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Approvals by Process</title>
+        <search>
+          <query>`ApprovedSearch` ProcessFileName!=""| top 0 ProcessFileName showperc=false | rename count as Approvals, ProcessFileName as Process</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Approvals by Rule</title>
+        <search>
+          <query>`ApprovedSearch` RuleName!="" | top 0 RuleName showperc=false | rename count as Approvals, RuleName as Rule</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <table>
+        <title>Approval Sources</title>
+        <search>
+          <query>`ApprovedSearch` | top 0 EventSubType showperc=false | rename count as Approvals, EventSubType as Reason</query>
+          <earliest>$timeR.earliest$</earliest>
+          <latest>$timeR.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>
